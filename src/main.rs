@@ -1,8 +1,21 @@
+use structopt::StructOpt;
 use tinc_utils::{HostName, Node, TincNetwork};
 
+#[derive(StructOpt, Debug)]
+#[structopt(name = "tinc_graph")]
+struct Opt {
+    #[structopt(short, long)]
+    network: String,
+    #[structopt(long)]
+    geoip_file: String,
+}
+
 fn main() {
-    let reader = maxminddb::Reader::open_readfile("GeoLite2-City.mmdb").unwrap();
-    let retiolum = TincNetwork::new("retiolum");
+    let opt = Opt::from_args();
+
+    let reader =
+        maxminddb::Reader::open_readfile(opt.geoip_file).expect("Failed to open GeoIP database");
+    let retiolum = TincNetwork::new(&opt.network);
     let edges = retiolum.get_edges();
     let subnets = retiolum.get_subnets();
     let nodes: std::collections::HashMap<HostName, Node> = retiolum
