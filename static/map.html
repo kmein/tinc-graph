@@ -88,13 +88,13 @@
                 image: new ol.style.Icon({
                   src: "http://krebsco.de/favicon.ico",
                   scale: feature.get("connections")
-                    ? Math.log(feature.get("connections")) / 2
+                    ? Math.log(feature.get("connections")) / 4 + 0.5
                     : 1,
                 }),
                 stroke: new ol.style.Stroke({
                   color: "#f77",
                   width: feature.get("weight")
-                    ? Math.log(parseInt(feature.get("weight"))) / 2
+                    ? Math.log(parseInt(feature.get("weight"))) / 4
                     : 1,
                 }),
               }),

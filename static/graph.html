@@ -83,7 +83,7 @@
         .selectAll("circle")
         .data(nodes)
         .join("circle")
-        .attr("r", (c) => Math.log(c.connections) * 3)
+        .attr("r", (c) => Math.log(c.connections) * 1.5 + 2)
         .attr("fill", "black")
         .call(drag(simulation));
 
