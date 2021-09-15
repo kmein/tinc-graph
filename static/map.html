@@ -44,7 +44,9 @@
           for (const [name, node] of Object.entries(nodes)) {
             node["longitude"] = jitter(node["longitude"]);
             node["latitude"] = jitter(node["latitude"]);
+          }
 
+          for (const [name, node] of Object.entries(nodes)) {
             const nodeCoordinates = ol.proj.fromLonLat([
               node["longitude"],
               node["latitude"],
