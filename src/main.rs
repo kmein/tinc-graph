@@ -1,5 +1,5 @@
 use structopt::StructOpt;
-use tinc_utils::{HostName, Node, TincNetwork};
+use tinc_graph::{HostName, Node, TincNetwork};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "tinc_graph")]

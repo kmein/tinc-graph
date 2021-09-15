@@ -1,5 +1,5 @@
 [package]
-name = "tinc-utils"
+name = "tinc-graph"
 version = "0.1.0"
 authors = ["Kierán Meinhardt <kmein@posteo.de>"]
 edition = "2018"

@@ -239,7 +239,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tinc-utils"
+name = "tinc-graph"
 version = "0.1.0"
 dependencies = [
  "maxminddb",
