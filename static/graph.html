@@ -4,8 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://d3js.org/d3.v6.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/spark-md5@3.0.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
   <style>
     .svg-container {
       display: inline-block;
@@ -107,7 +105,7 @@
         .data(nodes)
         .join("circle")
         .attr("r", (c) => Math.log(c.connections) * 1.5 + 2)
-        .attr("fill", "black")
+        .attr("fill", (c) => (c.connections > 1 ? "black" : "red"))
         .call(drag(simulation));
 
       node.append("title").text((d) => d.id);
