@@ -6,7 +6,7 @@ pkgs.mkShell {
     rustfmt
     jq
     (pkgs.writers.writeDashBin "serve" ''
-      ${pkgs.python3}/bin/python3 -m http.server -d ${./.}/static
+      ${pkgs.python3}/bin/python3 -m http.server -d static
     '')
   ];
 }
