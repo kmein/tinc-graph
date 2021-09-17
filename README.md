@@ -14,4 +14,4 @@ What you need:
   1. `sudo tinc-graph --geoip-file PATH_TO_YOUR_GEOIP_DATABASE --network NAME_OF_YOUR_NETWORK > static/network.json`
   2. `python3 -m http.server --directory static` (or similar)
   3. visit <http://0.0.0.0:8000/graph.html> and <http://0.0.0.0:8000/map.html>
-- ... get statistics about your network (via `jq`): `sudo tinc-graph --geoip-file PATH_TO_YOUR_GEOIP_DATABASE --network NAME_OF_YOUR_NETWORK | jq -f statistics.jq`
+- ... get statistics about your network (via `jq`): `sudo tinc-graph --geoip-file PATH_TO_YOUR_GEOIP_DATABASE --network NAME_OF_YOUR_NETWORK | ./tinc-statistics`
