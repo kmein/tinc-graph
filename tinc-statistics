@@ -1,5 +1,21 @@
 #!/usr/bin/env -S jq -f
-def average: add / length;
+def mean: add / length;
+
+def stdDev:
+  mean as $the_mean
+  | map(pow(. - $the_mean; 2))
+  | add
+  | sqrt;
+
+def median:
+  sort
+  | if length == 0 then
+      null
+    elif length % 2 == 0 then
+      (.[length/2] + .[length/2-1])/2
+    else
+      .[length/2|floor]
+    end;
 
 def statProperty(property):
   to_entries
@@ -11,7 +27,9 @@ def statProperty(property):
     maxNode: $max | .key,
     min: $min | .value | property,
     minNode: $min | .key,
-    avg: map(.value | property) | average
+    mean: map(.value | property) | mean,
+    median: map(.value | property) | median,
+    stdDev: map(.value | property) | stdDev,
   };
 
 . as $nodes
@@ -33,6 +51,6 @@ def statProperty(property):
 | $statistics
 | .superNodes |= (
   $nodes
-  | map_values(select((.to | length) > $statistics.connections.avg))
+  | map_values(select((.to | length) > $statistics.connections.mean))
   | keys
 )
