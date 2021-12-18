@@ -113,8 +113,13 @@
                 feature.get("hypothetical")
                   ? new ol.style.Style({
                       image: new ol.style.Circle({
-                        radius: 3,
-                        fill: new ol.style.Fill({ color: "red" }),
+                        radius: 4,
+                        fill: new ol.style.Fill({
+                          color: "rgba(0, 0, 0, 0.2)",
+                        }),
+                        stroke: new ol.style.Stroke({
+                          width: 1,
+                        }),
                       }),
                     })
                   : new ol.style.Style({
