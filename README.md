@@ -6,12 +6,12 @@ What you need:
 
 1. a Tinc network
 2. an IP geolocation database in binary MMDB format (can be downloaded from [MaxMind](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en) after creating an account)
-3. `tinc-graph`
+3. `tinc-graph`, `jq`
 
 ## How To ...
 - ... install: `cargo install`
 - ... run the examples:
   1. `sudo tinc-graph --geoip-file PATH_TO_YOUR_GEOIP_DATABASE --network NAME_OF_YOUR_NETWORK > static/network.json`
-  2. `python3 -m http.server --directory static` (or similar)
-  3. visit <http://0.0.0.0:8000/graph.html> and <http://0.0.0.0:8000/map.html>
-- ... get statistics about your network (via `jq`): `sudo tinc-graph --geoip-file PATH_TO_YOUR_GEOIP_DATABASE --network NAME_OF_YOUR_NETWORK | ./tinc-statistics`
+  2. `./tinc-statistics < static/network.json > static/statistics.json`
+  3. `python3 -m http.server --directory static` (or similar)
+  4. visit <http://0.0.0.0:8000/graph.html> and <http://0.0.0.0:8000/map.html>

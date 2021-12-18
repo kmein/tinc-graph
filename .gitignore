@@ -1,4 +1,5 @@
 /target
 static/network.json
+static/statistics.json
 *.mmdb
 result
