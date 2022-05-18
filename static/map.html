@@ -66,6 +66,7 @@
               );
               for (const target of node.to) {
                 const connectedNode = nodes[target.name];
+                if (!connectedNode) continue;
                 const connectedNodeCoordinates = ol.proj.fromLonLat([
                   connectedNode["longitude"],
                   connectedNode["latitude"],
