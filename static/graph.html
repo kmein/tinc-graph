@@ -59,12 +59,14 @@
       }));
 
       const links = Object.entries(network).flatMap(([name, node]) =>
-        node.to.map((target) => ({
-          id: `${name} ⇄ ${target.name}`,
-          source: name,
-          target: target.name,
-          value: target.weight,
-        }))
+        node && node.to.length > 0
+          ? node.to.map((target) => ({
+              id: `${name} ⇄ ${target.name}`,
+              source: name,
+              target: target.name,
+              value: target.weight,
+            }))
+          : []
       );
 
       const simulation = d3
