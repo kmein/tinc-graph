@@ -37,171 +37,169 @@
         return value + jitter;
       }
 
-      window.onload = () => {
-        $.getJSON("network.json", (nodes) => {
-          $.getJSON("statistics.json", (statistics) => {
-            let features = [];
+      window.onload = async () => {
+        const nodes = await fetch("network.json").then((x) => x.json());
 
-            for (const [name, node] of Object.entries(nodes)) {
-              node["longitude"] = jitter(node["longitude"]);
-              node["latitude"] = jitter(node["latitude"]);
-            }
+        const statistics = await fetch("statistics.json").then((x) => x.json());
 
-            for (const [name, node] of Object.entries(nodes)) {
-              const nodeCoordinates = ol.proj.fromLonLat([
-                node["longitude"],
-                node["latitude"],
-              ]);
-              features.push(
-                new ol.Feature({
-                  name,
-                  external: `${node["external-ip"]}:${node["external-port"]}`,
-                  internal: node["internal-ip"],
-                  connections: node["to"].length,
-                  location: [node["city"], node["country"]]
-                    .filter(Boolean)
-                    .join(", "),
-                  geometry: new ol.geom.Point(nodeCoordinates),
-                })
-              );
-              for (const target of node.to) {
-                const connectedNode = nodes[target.name];
-                if (!connectedNode) continue;
-                const connectedNodeCoordinates = ol.proj.fromLonLat([
-                  connectedNode["longitude"],
-                  connectedNode["latitude"],
-                ]);
-                features.push(
-                  new ol.Feature({
-                    name: `${name} ⇄ ${target.name}`,
-                    weight: target.weight,
-                    geometry: new ol.geom.LineString([
-                      nodeCoordinates,
-                      connectedNodeCoordinates,
-                    ]),
-                  })
-                );
-              }
-            }
+        let features = [];
 
+        for (const [name, node] of Object.entries(nodes)) {
+          node["longitude"] = jitter(node["longitude"]);
+          node["latitude"] = jitter(node["latitude"]);
+        }
+
+        for (const [name, node] of Object.entries(nodes)) {
+          const nodeCoordinates = ol.proj.fromLonLat([
+            node["longitude"],
+            node["latitude"],
+          ]);
+          features.push(
+            new ol.Feature({
+              name,
+              external: `${node["external-ip"]}:${node["external-port"]}`,
+              internal: node["internal-ip"],
+              connections: node["to"].length,
+              location: [node["city"], node["country"]]
+                .filter(Boolean)
+                .join(", "),
+              geometry: new ol.geom.Point(nodeCoordinates),
+            })
+          );
+          for (const target of node.to) {
+            const connectedNode = nodes[target.name];
+            if (!connectedNode) continue;
+            const connectedNodeCoordinates = ol.proj.fromLonLat([
+              connectedNode["longitude"],
+              connectedNode["latitude"],
+            ]);
             features.push(
               new ol.Feature({
-                name: "krebs center (mean)",
-                hypothetical: true,
-                geometry: new ol.geom.Point(
-                  ol.proj.fromLonLat([
-                    statistics.longitude.mean,
-                    statistics.latitude.mean,
-                  ])
-                ),
+                name: `${name} ⇄ ${target.name}`,
+                weight: target.weight,
+                geometry: new ol.geom.LineString([
+                  nodeCoordinates,
+                  connectedNodeCoordinates,
+                ]),
               })
             );
-            features.push(
-              new ol.Feature({
-                name: "krebs center (median)",
-                hypothetical: true,
-                geometry: new ol.geom.Point(
-                  ol.proj.fromLonLat([
-                    statistics.longitude.median,
-                    statistics.latitude.median,
-                  ])
-                ),
-              })
-            );
+          }
+        }
 
-            const vectorLayer = new ol.layer.Vector({
-              style: (feature, resolution) =>
-                feature.get("hypothetical")
-                  ? new ol.style.Style({
-                      image: new ol.style.Circle({
-                        radius: 4,
-                        fill: new ol.style.Fill({
-                          color: "rgba(0, 0, 0, 0.2)",
-                        }),
-                        stroke: new ol.style.Stroke({
-                          width: 1,
-                        }),
-                      }),
-                    })
-                  : new ol.style.Style({
-                      image: new ol.style.Icon({
-                        src: "http://krebsco.de/favicon.ico",
-                        scale: feature.get("connections")
-                          ? Math.log(feature.get("connections")) / 4 + 0.5
-                          : 1,
-                      }),
-                      stroke: new ol.style.Stroke({
-                        color: "#f77",
-                        width: feature.get("weight")
-                          ? Math.log(parseInt(feature.get("weight"))) / 4
-                          : 1,
-                      }),
+        features.push(
+          new ol.Feature({
+            name: "krebs center (mean)",
+            hypothetical: true,
+            geometry: new ol.geom.Point(
+              ol.proj.fromLonLat([
+                statistics.longitude.mean,
+                statistics.latitude.mean,
+              ])
+            ),
+          })
+        );
+        features.push(
+          new ol.Feature({
+            name: "krebs center (median)",
+            hypothetical: true,
+            geometry: new ol.geom.Point(
+              ol.proj.fromLonLat([
+                statistics.longitude.median,
+                statistics.latitude.median,
+              ])
+            ),
+          })
+        );
+
+        const vectorLayer = new ol.layer.Vector({
+          style: (feature, resolution) =>
+            feature.get("hypothetical")
+              ? new ol.style.Style({
+                  image: new ol.style.Circle({
+                    radius: 4,
+                    fill: new ol.style.Fill({
+                      color: "rgba(0, 0, 0, 0.2)",
                     }),
+                    stroke: new ol.style.Stroke({
+                      width: 1,
+                    }),
+                  }),
+                })
+              : new ol.style.Style({
+                  image: new ol.style.Icon({
+                    src: "http://krebsco.de/favicon.ico",
+                    scale: feature.get("connections")
+                      ? Math.log(feature.get("connections")) / 4 + 0.5
+                      : 1,
+                  }),
+                  stroke: new ol.style.Stroke({
+                    color: "#f77",
+                    width: feature.get("weight")
+                      ? Math.log(parseInt(feature.get("weight"))) / 4
+                      : 1,
+                  }),
+                }),
 
-              source: new ol.source.Vector({
-                features,
-              }),
-              opacity: 0.75,
-            });
+          source: new ol.source.Vector({
+            features,
+          }),
+          opacity: 0.75,
+        });
 
-            const map = new ol.Map({
-              layers: [
-                new ol.layer.Tile({ source: new ol.source.OSM() }),
-                vectorLayer,
-              ],
-              target: "map-canvas",
-              view: new ol.View({
-                center: ol.proj.fromLonLat([9, 51]),
-                zoom: 5,
-              }),
-            });
+        const map = new ol.Map({
+          layers: [
+            new ol.layer.Tile({ source: new ol.source.OSM() }),
+            vectorLayer,
+          ],
+          target: "map-canvas",
+          view: new ol.View({
+            center: ol.proj.fromLonLat([9, 51]),
+            zoom: 5,
+          }),
+        });
 
-            const element = document.getElementById("popup");
+        const element = document.getElementById("popup");
 
-            const popup = new ol.Overlay({
-              element,
-              positioning: "bottom-center",
-              stopEvent: false,
+        const popup = new ol.Overlay({
+          element,
+          positioning: "bottom-center",
+          stopEvent: false,
+        });
+        map.addOverlay(popup);
+        // display popup on click
+        map.on("click", function (evt) {
+          const feature = map.forEachFeatureAtPixel(evt.pixel, (a) => a);
+          if (feature) {
+            popup.setPosition(evt.coordinate);
+            $(element).popover({
+              placement: "top",
+              html: true,
             });
-            map.addOverlay(popup);
-            // display popup on click
-            map.on("click", function (evt) {
-              const feature = map.forEachFeatureAtPixel(evt.pixel, (a) => a);
-              if (feature) {
-                popup.setPosition(evt.coordinate);
-                $(element).popover({
-                  placement: "top",
-                  html: true,
-                });
-                $(element).attr(
-                  "data-content",
-                  `<strong>${feature.get("name")}</strong>` +
-                    (feature.get("location")
-                      ? ` ${feature.get("location")}`
-                      : "") +
-                    (feature.get("external")
-                      ? `<br/>external: ${feature.get("external")}`
-                      : "") +
-                    (feature.get("internal")
-                      ? `<br/>internal: ${feature.get("internal").join(" / ")}`
-                      : "") +
-                    (feature.get("connections")
-                      ? `<br/>connections: ${feature.get("connections")}`
-                      : "") +
-                    (feature.get("weight")
-                      ? `<br/>weight: ${feature.get("weight")}`
-                      : "")
-                );
-                $(element).popover("show");
-              } else {
-                $(element).popover("dispose");
-              }
-            });
-            // Close the popup when the map is moved
-            map.on("movestart", function () {
-              $(element).popover("dispose");
-            });
-          });
+            $(element).attr(
+              "data-content",
+              `<strong>${feature.get("name")}</strong>` +
+                (feature.get("location") ? ` ${feature.get("location")}` : "") +
+                (feature.get("external")
+                  ? `<br/>external: ${feature.get("external")}`
+                  : "") +
+                (feature.get("internal")
+                  ? `<br/>internal: ${feature.get("internal").join(" / ")}`
+                  : "") +
+                (feature.get("connections")
+                  ? `<br/>connections: ${feature.get("connections")}`
+                  : "") +
+                (feature.get("weight")
+                  ? `<br/>weight: ${feature.get("weight")}`
+                  : "")
+            );
+            $(element).popover("show");
+          } else {
+            $(element).popover("dispose");
+          }
+        });
+        // Close the popup when the map is moved
+        map.on("movestart", function () {
+          $(element).popover("dispose");
         });
       };
     </script>
