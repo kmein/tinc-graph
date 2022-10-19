@@ -42,6 +42,10 @@
 
         const statistics = await fetch("statistics.json").then((x) => x.json());
 
+        const pois = await fetch("http://c.r/poi.json")
+          .then((x) => x.json())
+          .catch(() => ({}));
+
         let features = [];
 
         for (const [name, node] of Object.entries(nodes)) {
@@ -111,6 +115,21 @@
           })
         );
 
+        for (const [poiName, poiLocation] of Object.entries(pois)) {
+          features.push(
+            new ol.Feature({
+              name: poiName,
+              poi: true,
+              geometry: new ol.geom.Point(
+                ol.proj.fromLonLat([
+                  poiLocation.longitude,
+                  poiLocation.latitude,
+                ])
+              ),
+            })
+          );
+        }
+
         const vectorLayer = new ol.layer.Vector({
           style: (feature, resolution) =>
             feature.get("hypothetical")
@@ -123,6 +142,14 @@
                     stroke: new ol.style.Stroke({
                       width: 1,
                     }),
+                  }),
+                })
+              : feature.get("poi")
+              ? new ol.style.Style({
+                  image: new ol.style.Circle({
+                    radius: 3,
+                    fill: new ol.style.Fill({ color: "rgba(0, 0, 255, 0.8)" }),
+                    stroke: new ol.style.Stroke({ width: 1 }),
                   }),
                 })
               : new ol.style.Style({
