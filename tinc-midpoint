@@ -1,0 +1,25 @@
+#!/usr/bin/env -S jq -f
+def pi: 3.14159265;
+def radians: (. * pi) / 180;
+def unradians: (. * 180) / pi;
+
+def cartesian: (.latitude | radians) as $lat | (.longitude | radians) as $lon | {
+  x: (($lat | cos) * ($lon | cos)),
+  y: (($lat | cos) * ($lon | sin)),
+  z: ($lat | sin)
+};
+
+def average: add / length;
+
+map(select(.latitude != null and .longitude != null))
+| map(cartesian)
+| {
+  x: map(.x) | average,
+  y: map(.y) | average,
+  z: map(.z) | average
+}
+| ((.x * .x + .y * .y) | sqrt) as $hypotenuse
+| {
+  longitude: atan2(.y; .x) | unradians,
+  latitude: atan2(.z; $hypotenuse) | unradians
+}

@@ -40,7 +40,7 @@
       window.onload = async () => {
         const nodes = await fetch("network.json").then((x) => x.json());
 
-        const statistics = await fetch("statistics.json").then((x) => x.json());
+        const midpoint = await fetch("midpoint.json").then((x) => x.json());
 
         const pois = await fetch("http://c.r/poi.json")
           .then((x) => x.json())
@@ -92,25 +92,10 @@
 
         features.push(
           new ol.Feature({
-            name: "krebs center (mean)",
+            name: "krebs center",
             hypothetical: true,
             geometry: new ol.geom.Point(
-              ol.proj.fromLonLat([
-                statistics.longitude.mean,
-                statistics.latitude.mean,
-              ])
-            ),
-          })
-        );
-        features.push(
-          new ol.Feature({
-            name: "krebs center (median)",
-            hypothetical: true,
-            geometry: new ol.geom.Point(
-              ol.proj.fromLonLat([
-                statistics.longitude.median,
-                statistics.latitude.median,
-              ])
+              ol.proj.fromLonLat([midpoint.longitude, midpoint.latitude])
             ),
           })
         );
