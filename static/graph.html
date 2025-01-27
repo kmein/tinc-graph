@@ -1,128 +1,67 @@
 <!DOCTYPE html>
+
 <head>
   <title>tinc network graph</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.js"></script>
   <style>
-    .svg-container {
-      display: inline-block;
-      position: relative;
-      width: 100%;
-      padding-bottom: 100%; /* aspect ratio */
-      vertical-align: top;
-      overflow: hidden;
-    }
-    .svg-content-responsive {
-      display: inline-block;
-      position: absolute;
-      top: 10px;
-      left: 0;
+    #graph {
+      width: 100vw;
+      height: 100vh;
     }
   </style>
 </head>
-<script>
-  const height = window.innerHeight / 3;
-  const width = window.innerWidth / 3;
 
-  drag = (simulation) => {
-    function dragstarted(event) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      event.subject.fx = event.subject.x;
-      event.subject.fy = event.subject.y;
-    }
+<body>
+  <div id="graph"></div>
+  <script>
+    const height = window.innerHeight / 3;
+    const width = window.innerWidth / 3;
 
-    function dragged(event) {
-      event.subject.fx = event.x;
-      event.subject.fy = event.y;
-    }
+    fetch("network.json")
+      .then((response) => response.json())
+      .then((network) => {
+        const nodes = Object.entries(network).map(([name, node]) => ({
+          id: name,
+          label: name,
+          connections: node.to.length,
+          color: "#f88",
+          shape: "box",
+        }));
 
-    function dragended(event) {
-      if (!event.active) simulation.alphaTarget(0);
-      event.subject.fx = null;
-      event.subject.fy = null;
-    }
-
-    return d3
-      .drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended);
-  };
-
-  fetch("network.json")
-    .then((response) => response.json())
-    .then((network) => {
-      const nodes = Object.entries(network).map(([name, node]) => ({
-        id: name,
-        connections: node.to.length,
-      }));
-
-      const links = Object.entries(network).flatMap(([name, node]) =>
-        node && node.to.length > 0
-          ? node.to.map((target) => ({
+        const completeEdges = Object.entries(network).flatMap(([name, node]) =>
+          node && node.to.length > 0
+            ? node.to.map((target) => ({
               id: `${name} ⇄ ${target.name}`,
-              source: name,
-              target: target.name,
+              from: name,
+              to: target.name,
               value: target.weight,
             }))
-          : []
-      );
+            : []
+        );
 
-      const simulation = d3
-        .forceSimulation(nodes)
-        .force(
-          "link",
-          d3
-            .forceLink(links)
-            .id((d) => d.id)
-            .distance((d) => d.weight || 1)
-        )
-        .force("charge", d3.forceManyBody())
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        // deduplicate edges
+        const edges = [];
+        const seenPairs = new Set();
+        completeEdges.forEach(edge => {
+          const pair = [edge.from, edge.to].sort().join(' ⇄ '); // Create a unique identifier for the pair
+          if (!seenPairs.has(pair)) {
+            seenPairs.add(pair);
+            edges.push(edge);
+          }
+        });
 
-      const bodySelection = d3.select("body");
-      const svg = bodySelection
-        .append("div")
-        .classed("svg-container", true)
-        .append("svg")
-        .attr("preserveAspectRatio", "xMinYMin meet")
-        .attr("viewBox", [0, 0, width, height])
-        .classed("svg-content-responsive", true);
+        const container = document.getElementById("graph");
 
-      const link = svg
-        .append("g")
-        .attr("stroke", "#999")
-        .attr("stroke-opacity", 0.6)
-        .selectAll("line")
-        .data(links)
-        .join("line")
-        .attr("stroke-width", (d) => Math.log(d.value) / 3);
+        const data = {nodes, edges};
 
-      const node = svg
-        .append("g")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1)
-        .selectAll("circle")
-        .data(nodes)
-        .join("circle")
-        .attr("r", (c) => Math.log(c.connections) * 1.5 + 2)
-        .attr("fill", (c) => (c.connections > 1 ? "black" : "red"))
-        .call(drag(simulation));
+        const options = {
+          physics: {stabilization: false},
+        };
 
-      node.append("title").text((d) => d.id);
-      link.append("title").text((d) => d.id);
-
-      simulation.on("tick", () => {
-        link
-          .attr("x1", (d) => d.source.x)
-          .attr("y1", (d) => d.source.y)
-          .attr("x2", (d) => d.target.x)
-          .attr("y2", (d) => d.target.y);
-
-        node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+        new vis.Network(container, data, options);
       });
-
-      return svg.node();
-    });
-</script>
+  </script>
+</body>
