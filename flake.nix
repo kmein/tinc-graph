@@ -3,7 +3,7 @@
 
   inputs = {
     rust-overlay.url = "github:oxalica/rust-overlay";
-    flake-utils.follows = "rust-overlay/flake-utils";
+    flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.follows = "rust-overlay/nixpkgs";
   };
 
@@ -38,7 +38,7 @@
           cp -r $src/static $out
           cp $src/tinc-midpoint $out/bin
         '';
-        cargoSha256 = "1v8fydpqgcv52fcvkpw6j9cx2xhdryn98b91f3d53ph2qqxj25qn";
+        cargoHash = "sha256-GhDyFhIZDavoAr3182ophbVnqBvpv2cps1k3eCSe0NQ=";
       };
     });
 }
