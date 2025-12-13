@@ -3,42 +3,57 @@
 
   inputs = {
     rust-overlay.url = "github:oxalica/rust-overlay";
-    flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.follows = "rust-overlay/nixpkgs";
   };
 
-  outputs = inputs: with inputs;
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      rust-overlay,
+    }:
     let
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [
-          rust-overlay.overlays.default
-        ];
-      };
+      eachSupportedSystem = lib.genAttrs lib.systems.flakeExposed;
+      lib = nixpkgs.lib;
+      pkgsFor =
+        system:
+        import nixpkgs {
+          inherit system;
+          overlays = [
+            rust-overlay.overlays.default
+          ];
+        };
     in
     {
-      devShell = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          cargo
-          rustc
-          rustfmt
-          jq
-          (pkgs.writers.writeDashBin "serve" ''
-            ${pkgs.python3}/bin/python3 -m http.server -d static
-          '')
-        ];
-      };
-      defaultPackage = self.packages.${system}.tinc-graph;
-      packages.tinc-graph = pkgs.rustPlatform.buildRustPackage rec {
-        name = "tinc-graph";
-        src = ./.;
-        dontPatchShebangs = 1;
-        postInstall = ''
-          cp -r $src/static $out
-          cp $src/tinc-midpoint $out/bin
-        '';
-        cargoHash = "sha256-GhDyFhIZDavoAr3182ophbVnqBvpv2cps1k3eCSe0NQ=";
-      };
-    });
+      devShell = eachSupportedSystem (
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        pkgs.mkShell {
+          buildInputs = [
+            pkgs.cargo
+            pkgs.rustc
+            pkgs.rustfmt
+            pkgs.jq
+            (pkgs.writers.writeDashBin "serve" ''
+              ${pkgs.python3}/bin/python3 -m http.server -d static
+            '')
+          ];
+        }
+      );
+      defaultPackage = eachSupportedSystem (system: self.packages.${system}.tinc-graph);
+      packages = eachSupportedSystem (system: {
+        tinc-graph = (pkgsFor system).rustPlatform.buildRustPackage {
+          name = "tinc-graph";
+          src = ./.;
+          dontPatchShebangs = 1;
+          postInstall = ''
+            cp -r $src/static $out
+            cp $src/tinc-midpoint $out/bin
+          '';
+          cargoHash = "sha256-GhDyFhIZDavoAr3182ophbVnqBvpv2cps1k3eCSe0NQ=";
+        };
+      });
+    };
 }
