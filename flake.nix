@@ -2,8 +2,9 @@
   description = "Generate map data and statistics from a tinc network";
 
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    nixpkgs.follows = "rust-overlay/nixpkgs";
+    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
