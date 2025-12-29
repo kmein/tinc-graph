@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
     naersk.url = "github:nix-community/naersk";
+    fenix.url = "github:nix-community/fenix";
+    naersk.inputs.fenix.follows = "fenix";
     naersk.inputs.nixpkgs.follows = "nixpkgs";
   };
 
@@ -11,6 +13,7 @@
     {
       self,
       nixpkgs,
+      fenix,
       naersk,
     }:
     let
