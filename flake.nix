@@ -3,15 +3,15 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+    naersk.url = "github:nix-community/naersk";
+    naersk.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
     {
       self,
       nixpkgs,
-      rust-overlay,
+      naersk,
     }:
     let
       eachSupportedSystem = lib.genAttrs lib.systems.flakeExposed;
@@ -20,9 +20,7 @@
         system:
         import nixpkgs {
           inherit system;
-          overlays = [
-            rust-overlay.overlays.default
-          ];
+          overlays = [ ];
         };
     in
     {
@@ -44,17 +42,24 @@
         }
       );
       defaultPackage = eachSupportedSystem (system: self.packages.${system}.tinc-graph);
-      packages = eachSupportedSystem (system: {
-        tinc-graph = (pkgsFor system).rustPlatform.buildRustPackage {
-          name = "tinc-graph";
-          src = ./.;
-          dontPatchShebangs = 1;
-          postInstall = ''
-            cp -r $src/static $out
-            cp $src/tinc-midpoint $out/bin
-          '';
-          cargoHash = "sha256-GhDyFhIZDavoAr3182ophbVnqBvpv2cps1k3eCSe0NQ=";
-        };
-      });
+      packages = eachSupportedSystem (
+        system:
+        let
+          pkgs = pkgsFor system;
+          naersk' = pkgs.callPackage naersk { };
+        in
+        {
+          tinc-graph = naersk'.buildPackage {
+            name = "tinc-graph";
+            src = ./.;
+            dontPatchShebangs = 1;
+            postInstall = ''
+              cp -r $src/static $out
+              cp $src/tinc-midpoint $out/bin
+            '';
+            cargoHash = "sha256-GhDyFhIZDavoAr3182ophbVnqBvpv2cps1k3eCSe0NQ=";
+          };
+        }
+      );
     };
 }
